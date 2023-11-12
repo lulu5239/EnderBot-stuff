@@ -7,8 +7,10 @@ var logger = {
 var datas = {}
 datas.EnderBotCards = []
 setTimeout(()=>{ // Loading cards...
+  // This is a complex script to save up RAM, but this shorter alternative should also work:
+  // datas.EnderBotCards = fs.readFileSync("./EBcards.json","utf8").split("\n").map(l=>JSON.parse(l))
   let p = new Promise((ok,err)=>{
-    let stream = fs.createReadStream("./EBcards.json", {encoding:"utf8"})
+    let stream = fs.createReadStream("./EBcards.json", {encoding:"utf8"}) // Downloadable at: https://github.com/lulu5239/EnderBot-stuff/releases/tag/v1.1
     let reste = ""; let crash = false
     stream.on("data",chunk=>{if(crash){return}
       reste+=chunk
@@ -33,7 +35,18 @@ setTimeout(()=>{ // Loading cards...
   })
 },1000)
 
-var saveCards = async ()=>{
+/* The structure of each card:
+ - nom: the character name;
+ - source: the anime source;
+ - stars: the number of stars;
+ - img: a MyAnimeList URL to the character's image;
+ - imgSource: set in case the image got deleted;
+ - pixels: an array of saves of the character's image as seen on summons;
+ - pixelsNom: an array of saves of the text under the character on summons.
+*/
+
+var saveCards = async ()=>{ // Also complex script for saving, simpler alternative:
+  // fs.writeFileSync("./EBcards.json",datas.EnderBotCards.map(l=>JSON.stringify(l)).join("\n"))
   let stream = fs.createWriteStream("./EBcards.json",{encoding:"utf8"})
   for(let i = 0; i<datas.EnderBotCards.length; i+=5){
     stream.write(datas.EnderBotCards.slice(i,i+5).map(l=>JSON.stringify(l)).join("\n")+(i+5<datas.EnderBotCards.length ? "\n" : ""))
@@ -41,6 +54,7 @@ var saveCards = async ()=>{
   stream.end()
 }
 
+// To display cards in embeds.
 // n: number in the cards list
 // prise: if the card has been taken
 var embedEnderBotCard = (n,prise)=>{
@@ -55,16 +69,17 @@ var embedEnderBotCard = (n,prise)=>{
     title:"No data...",
     footer:{text:n!==-1 ? "#"+n : "Unknown card."},
     color:0x774400,
-    thumbnail:{url:"https://enderbot.lublox.tk/restore-card/"+n+"?"+Math.random()},
+    thumbnail:{url:"https://enderbot.lublox.tk/restore-card/"+n+"?"+Math.random()}, // Edit if you have a similar website I guess.
   }
 }
 
+// For finding which cards are on the summon.
 // url: the URL to the summon
 // noNew: use to make the summon not change data, if the summon doesn't directly come from EnderBot for example
 // toMessage: to convert the result into a message
 var checkEnderBotSummon = async (url,noNew,toMessage)=>{
   let cards; const dt = new Date().getTime()
-  if(tempDatas.EnderBotSummonInfos[url]===null){ // if not cached
+  if(tempDatas.EnderBotSummonInfos[url]===null){ // if currently fetching/processing
     let t = 0
     let ok;let err;let p = new Promise((ok2,err2)=>{ok = ok2;err = err2})
     let f;f = async ()=>{t++
@@ -87,7 +102,7 @@ var checkEnderBotSummon = async (url,noNew,toMessage)=>{
   }
   if(cards && cards.includes(null) && !noNew){cards = null} // Not using cache when there was an unknown card
   let img1; let ctx
-  if(!cards){
+  if(!cards){ // If not cached, fetching summon...
     let p = new Promise((ok,errer)=>{
       https.get(url
       	,stream=>{
@@ -136,8 +151,7 @@ var checkEnderBotSummon = async (url,noNew,toMessage)=>{
         if(m >= 0.4){matchs.push({m,c})}
       })
     })
-    let carte = matchs.length && matchs.sort((m1,m2)=>m2.m-m1.m)[0].c // 0Taking card corresponding the most
-    //console.log(carte.m); carte = carte.c
+    let carte = matchs.length && matchs.sort((m1,m2)=>m2.m-m1.m)[0].c // Choosing the card with the most similar pixels
     
     let r2 = "" // Taking text pixels (unused)
     plus = 2+Math.floor(pos*292.5)
