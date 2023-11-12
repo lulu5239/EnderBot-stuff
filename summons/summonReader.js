@@ -1,4 +1,6 @@
-const PImage = require("pureimage")
+const fs = require("fs")
+const PImage = require("pureimage") // Needs to be installed
+const https = require("https")
 var tempDatas = {EnderBotSummonInfos:{}}
 var logger = {
   summonCheckTimings: false,
@@ -33,7 +35,7 @@ setTimeout(()=>{ // Loading cards...
     console.error("Error loading EnderBot cards...")
     console.error(e)
   })
-},1000)
+},0)
 
 /* The structure of each card:
  - nom: the character name;
@@ -71,6 +73,11 @@ var embedEnderBotCard = (n,prise)=>{
     color:0x774400,
     thumbnail:{url:"https://enderbot.lublox.tk/restore-card/"+n+"?"+Math.random()}, // Edit if you have a similar website I guess.
   }
+}
+
+// Weird function, maybe useful with bitmaps.
+var getPixelPos = (width,x,y,z)=>{
+  return (x+y*width)*4+z
 }
 
 // For finding which cards are on the summon.
@@ -221,3 +228,7 @@ var checkEnderBotSummon = async (url,noNew,toMessage)=>{
       }))] || undefined}
   }else{return cards}
 }
+
+setTimeout(()=>{return // For testing?
+  checkEnderBotSummon("https://media.discordapp.net/attachments/310516646257360907/1173395767977844736/ebdrop.png?ex=6563ccf7&is=655157f7&hm=e893d618e6fd6ce048867aae95e0ea32441d2f1ce309a55d8fde66d4b1f3413a&",false,true).then(console.log)
+},5000)
