@@ -12,7 +12,7 @@ setTimeout(()=>{ // Loading cards...
   // This is a complex script to save up RAM, but this shorter alternative should also work:
   // datas.EnderBotCards = fs.readFileSync("./EBcards.json","utf8").split("\n").map(l=>JSON.parse(l))
   let p = new Promise((ok,err)=>{
-    let stream = fs.createReadStream("./EBcards.json", {encoding:"utf8"}) // Downloadable at: https://github.com/lulu5239/EnderBot-stuff/releases/tag/v1.1
+    let stream = fs.createReadStream("./EBcards.json", {encoding:"utf8"}) // Downloadable at: https://github.com/lulu5239/EnderBot-stuff/releases/tag/v1
     let reste = ""; let crash = false
     stream.on("data",chunk=>{if(crash){return}
       reste+=chunk
@@ -81,6 +81,7 @@ var getPixelPos = (width,x,y,z)=>{
 }
 
 // For finding which cards are on the summon.
+// This function may throw error messages, make sure to catch them and possibly display them.
 // url: the URL to the summon
 // noNew: use to make the summon not change data, if the summon doesn't directly come from EnderBot for example
 // toMessage: to convert the result into a message
@@ -124,6 +125,12 @@ var checkEnderBotSummon = async (url,noNew,toMessage)=>{
     })
     if(!img1){return}
     ctx = img1.getContext("2d")
+    if(ctx.bitmap.width === 748 && ctx.bitmap.height === 581){ // Conditions for resizing the image
+      let img2 = PImage.make(877,682)
+      let ctx2 = img2.getContext("2d")
+      ctx2.drawImage(img1,0,0,ctx.bitmap.width,ctx.bitmap.height,0,0,877,682)
+      ctx = ctx2; img1 = img2
+    }
     if(ctx.bitmap.width !== 877 && ctx.bitmap.height!== 682){
       delete tempDatas.EnderBotSummonInfos[url]
       throw "Wrong image size."
